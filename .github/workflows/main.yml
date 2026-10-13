@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout source
+      - name: Get source code
         uses: actions/checkout@v4
 
       - name: Set up Java
@@ -23,7 +23,7 @@ jobs:
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
 
-      - name: Install Android SDK packages
+      - name: Install Android SDK
         run: sdkmanager "platforms;android-35" "build-tools;35.0.0"
 
       - name: Set up Gradle
@@ -31,17 +31,23 @@ jobs:
         with:
           gradle-version: '8.9'
 
-      - name: Extract Android project
+      - name: Extract project ZIP
         run: |
           unzip -q RouteOrderAlertAndroid_Source.zip -d source
 
       - name: Build APK
         run: |
-          cd source/RouteOrderAlertAndroid
+          PROJECT_DIR=$(find source -type f -path '*/app/build.gradle' | head -n 1)
+          if [ -z "$PROJECT_DIR" ]; then
+            echo "Android project not found"
+            exit 1
+          fi
+          PROJECT_DIR="${PROJECT_DIR%/app/build.gradle}"
+          cd "$PROJECT_DIR"
           gradle assembleDebug
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: RouteAlert-APK
-          path: source/RouteOrderAlertAndroid/app/build/outputs/apk/debug/app-debug.apk
+          path: source/**/app/build/outputs/apk/debug/*.apk
