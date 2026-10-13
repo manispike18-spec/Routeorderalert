@@ -22,8 +22,11 @@ jobs:
 
       - name: Set up Android SDK
         uses: android-actions/setup-android@v3
-        with:
-          packages: 'platforms;android-35,build-tools;35.0.0'
+
+      - name: Install Android SDK packages
+        run: |
+          yes | sdkmanager --licenses || true
+          sdkmanager "platforms;android-35" "build-tools;35.0.0"
 
       - name: Set up Gradle
         uses: gradle/actions/setup-gradle@v4
@@ -36,12 +39,12 @@ jobs:
 
       - name: Build APK
         run: |
-          PROJECT_DIR=$(find source -type f -path '*/app/build.gradle' | head -n 1)
-          if [ -z "$PROJECT_DIR" ]; then
+          PROJECT_FILE=$(find source -type f -path '*/app/build.gradle' | head -n 1)
+          if [ -z "$PROJECT_FILE" ]; then
             echo "Android project not found"
             exit 1
           fi
-          PROJECT_DIR="${PROJECT_DIR%/app/build.gradle}"
+          PROJECT_DIR="${PROJECT_FILE%/app/build.gradle}"
           cd "$PROJECT_DIR"
           gradle assembleDebug
 
